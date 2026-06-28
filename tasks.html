@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% set active_tab = 'tasks' %}
+{% block title %}{{ reunion.name }} — Tasks{% endblock %}
+{% block content %}
+
+<div class="rp-section-head">
+  <div>
+    <h2>Task board</h2>
+    <p class="rp-subtitle">Grab a card to take it off the group's plate.</p>
+  </div>
+</div>
+
+{% if editing %}
+<div class="rp-form">
+  <form method="POST" action="{{ url_for('board.create_task', reunion_id=reunion_id) }}">
+    <input type="text" name="title" placeholder="What needs doing? e.g. Book the lake house" required>
+    <div class="rp-chip-row">
+      {% for cat in ['general', 'food', 'lodging', 'travel', 'activities', 'money'] %}
+        <label class="rp-chip" style="display:inline-flex; align-items:center;">
+          <input type="radio" name="category" value="{{ cat }}" {{ 'checked' if cat == 'general' }} style="margin-right:4px;">
+          {{ cat|capitalize }}
+        </label>
+      {% endfor %}
+    </div>
+    <textarea name="notes" placeholder="Any details? (optional)"></textarea>
+    <div class="rp-form-actions">
+      <button type="submit" class="btn btn-primary">Add to board</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div style="margin-top:20px;">
+  {% if not tasks %}
+    <div class="rp-empty">No tasks yet{% if editing %}. Add the first one above{% endif %}.</div>
+  {% else %}
+    {% for t in tasks %}
+      <div class="rp-task rp-task-cat-{{ t.category }} {{ 'done' if t.done }}">
+        {% if editing %}
+        <form method="POST" action="{{ url_for('board.toggle_task_done', reunion_id=reunion_id, task_id=t.id) }}" class="rp-checkbox-form">
+          <button type="submit" class="{{ 'checked' if t.done }}" aria-label="Toggle done">{{ '✓' if t.done }}</button>
+        </form>
+        {% else %}
+        <div class="rp-checkbox-form"><button disabled class="{{ 'checked' if t.done }}">{{ '✓' if t.done }}</button></div>
+        {% endif %}
+
+        <div style="flex:1; min-width:0;">
+          <p class="rp-task-title {{ 'done' if t.done }}">{{ t.title }}</p>
+          {% if t.notes %}<p class="rp-task-notes">{{ t.notes }}</p>{% endif %}
+          <div class="rp-task-meta">
+            <span class="rp-tag">{{ t.category }}</span>
+            {% if t.claimed_by_name %}
+              <span class="rp-claimed-tag {{ 'mine' if t.claimed_by_name == current_name else 'other' }}">
+                {% if t.claimed_by_name == current_name %}Claimed by you{% else %}Claimed by {{ t.claimed_by_name }}{% endif %}
+              </span>
+            {% endif %}
+            <button class="rp-comments-toggle" onclick="toggleComments('{{ t.id }}')">
+              {{ t.comment_count }} comment{{ 's' if t.comment_count != 1 }}
+            </button>
+          </div>
+
+          <div id="comments-wrap-{{ t.id }}" style="display:none;" data-loaded="false" data-url="{{ url_for('board.view_comments', reunion_id=reunion_id, parent_type='task', parent_id=t.id) }}"></div>
+        </div>
+
+        {% if editing %}
+        <div style="display:flex; gap:4px; flex-shrink:0;">
+          {% if not t.claimed_by_name and not t.done %}
+            <form method="POST" action="{{ url_for('board.claim_task', reunion_id=reunion_id, task_id=t.id) }}">
+              <button type="submit" class="btn btn-dark btn-sm">Claim</button>
+            </form>
+          {% endif %}
+          {% if t.claimed_by_name == current_name and not t.done %}
+            <form method="POST" action="{{ url_for('board.release_task', reunion_id=reunion_id, task_id=t.id) }}">
+              <button type="submit" class="btn-icon" style="font-size:12px;">Release</button>
+            </form>
+          {% endif %}
+          <form method="POST" action="{{ url_for('board.delete_task', reunion_id=reunion_id, task_id=t.id) }}">
+            <button type="submit" class="btn-icon" aria-label="Delete">✕</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<script>
+function toggleComments(id) {
+  const el = document.getElementById('comments-wrap-' + id);
+  const visible = el.style.display !== 'none';
+  if (visible) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  if (el.dataset.loaded === 'false') {
+    fetch(el.dataset.url).then(r => r.text()).then(html => {
+      el.innerHTML = html;
+      el.dataset.loaded = 'true';
+    });
+  }
+}
+</script>
+
+{% endblock %}

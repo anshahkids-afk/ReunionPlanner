@@ -1,0 +1,19 @@
+<div class="rp-comments-block" id="comments-{{ parent_id }}">
+  {% for c in comments %}
+    <div class="rp-comment">
+      <div class="rp-comment-author">{{ c.author_name or "Someone" }}</div>
+      <p class="rp-comment-body">{{ c.body }}</p>
+    </div>
+  {% else %}
+    <p class="rp-subtitle">No comments yet.</p>
+  {% endfor %}
+  {% if editing %}
+  <form class="rp-comment-form" method="POST"
+        action="{{ url_for('board.add_comment', reunion_id=reunion_id, parent_type=parent_type, parent_id=parent_id) }}">
+    <input type="text" name="body" placeholder="Add a comment…" required>
+    <button type="submit" class="btn btn-secondary btn-sm">Post</button>
+  </form>
+  {% else %}
+  <p class="rp-subtitle">Enter the edit code above to comment.</p>
+  {% endif %}
+</div>

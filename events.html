@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% set active_tab = 'events' %}
+{% block title %}{{ reunion.name }} — Events{% endblock %}
+{% block content %}
+
+<div class="rp-section-head">
+  <div>
+    <h2>Schedule</h2>
+    <p class="rp-subtitle">Every gathering, meal, and outing in one place.</p>
+  </div>
+  <a href="{{ url_for('board.calendar_view', reunion_id=reunion_id) }}" class="btn btn-secondary">View calendar</a>
+</div>
+
+{% if editing %}
+<div class="rp-form">
+  <form method="POST" action="{{ url_for('board.create_event', reunion_id=reunion_id) }}">
+    <input type="text" name="title" placeholder="Event name, e.g. Welcome dinner" required>
+    <div class="rp-form-row">
+      <input type="date" name="event_date">
+      <input type="time" name="event_time">
+    </div>
+    <input type="text" name="location" placeholder="Location (optional)">
+    <textarea name="details" placeholder="Details — what to bring, dress code, etc. (optional)"></textarea>
+    <div class="rp-form-actions">
+      <button type="submit" class="btn btn-primary">Add to schedule</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div style="margin-top:20px;">
+  {% if not events %}
+    <div class="rp-empty">No events yet{% if editing %}. Add the first one above{% endif %}.</div>
+  {% else %}
+    {% for e in events %}
+      <div class="rp-event">
+        <div class="rp-event-date-box">
+          <div class="rp-event-date-day">{{ e.event_date or 'TBD' }}</div>
+          {% if e.event_time %}<div class="rp-event-date-dow">{{ e.event_time|time12 }}</div>{% endif %}
+        </div>
+        <div style="flex:1; min-width:0;">
+          <strong>{{ e.title }}</strong>
+          <div class="rp-event-meta">
+            {% if e.location %}<span>📍 {{ e.location }}</span>{% endif %}
+          </div>
+          {% if e.details %}<p class="rp-task-notes">{{ e.details }}</p>{% endif %}
+          <div class="rp-task-meta" style="margin-top:6px;">
+            <button class="rp-comments-toggle" onclick="toggleComments('{{ e.id }}')">
+              {{ e.comment_count }} comment{{ 's' if e.comment_count != 1 }}
+            </button>
+          </div>
+          <div id="comments-wrap-{{ e.id }}" style="display:none;" data-loaded="false" data-url="{{ url_for('board.view_comments', reunion_id=reunion_id, parent_type='event', parent_id=e.id) }}"></div>
+        </div>
+        {% if editing %}
+        <form method="POST" action="{{ url_for('board.delete_event', reunion_id=reunion_id, event_id=e.id) }}">
+          <button type="submit" class="btn-icon" aria-label="Delete">✕</button>
+        </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<script>
+function toggleComments(id) {
+  const el = document.getElementById('comments-wrap-' + id);
+  const visible = el.style.display !== 'none';
+  if (visible) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  if (el.dataset.loaded === 'false') {
+    fetch(el.dataset.url).then(r => r.text()).then(html => {
+      el.innerHTML = html;
+      el.dataset.loaded = 'true';
+    });
+  }
+}
+</script>
+
+{% endblock %}

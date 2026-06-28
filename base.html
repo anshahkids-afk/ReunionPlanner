@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Reunion Planner{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  {% if reunion %}
+  <header class="rp-header">
+    <div class="rp-header-inner">
+      <div>
+        <h1 class="rp-reunion-name">{{ reunion.name }}</h1>
+        {% if reunion.tagline %}<p class="rp-reunion-tagline">{{ reunion.tagline }}</p>{% endif %}
+      </div>
+      <div class="rp-user-pill">
+        <span>{{ current_name }}</span>
+        {% if editing %}
+          <span class="rp-edit-badge">editing</span>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <nav class="rp-nav">
+    <a href="{{ url_for('board.overview', reunion_id=reunion_id) }}" class="rp-nav-link {{ 'active' if active_tab == 'overview' }}">Overview</a>
+    <a href="{{ url_for('board.tasks', reunion_id=reunion_id) }}" class="rp-nav-link {{ 'active' if active_tab == 'tasks' }}">Tasks</a>
+    <a href="{{ url_for('board.events', reunion_id=reunion_id) }}" class="rp-nav-link {{ 'active' if active_tab == 'events' }}">Events</a>
+    <a href="{{ url_for('board.calendar_view', reunion_id=reunion_id) }}" class="rp-nav-link {{ 'active' if active_tab == 'calendar' }}">Calendar</a>
+    <a href="{{ url_for('board.notes', reunion_id=reunion_id) }}" class="rp-nav-link {{ 'active' if active_tab == 'notes' }}">Notes</a>
+    <a href="{{ url_for('board.places', reunion_id=reunion_id) }}" class="rp-nav-link {{ 'active' if active_tab == 'places' }}">Places</a>
+    <a href="{{ url_for('board.people', reunion_id=reunion_id) }}" class="rp-nav-link {{ 'active' if active_tab == 'people' }}">People</a>
+  </nav>
+
+  {% if not editing %}
+  <div class="rp-unlock-bar">
+    <span>You're viewing this reunion. Enter the edit code to make changes.</span>
+    <form method="POST" action="{{ url_for('access.unlock_editing', reunion_id=reunion_id) }}">
+      <input type="text" name="edit_code" placeholder="Edit code" required>
+      <button type="submit" class="btn btn-dark btn-sm">Unlock editing</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% elif current_name %}
+  <header class="rp-header rp-header-simple">
+    <div class="rp-header-inner">
+      <h1 class="rp-reunion-name">Reunion Planner</h1>
+      <div class="rp-user-pill"><span>{{ current_name }}</span></div>
+    </div>
+  </header>
+  {% endif %}
+
+  <main class="rp-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="rp-flash-stack">
+          {% for category, message in messages %}
+            <div class="rp-flash rp-flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>

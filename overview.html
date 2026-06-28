@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% set active_tab = 'overview' %}
+{% block title %}{{ reunion.name }} — Overview{% endblock %}
+{% block content %}
+
+<div class="rp-card" style="margin-bottom:20px; background: var(--surface-alt); border: none;">
+  <div class="rp-subtitle" style="margin-bottom:4px;">Plan code (share so others can view):</div>
+  <code style="font-size:15px; font-weight:700; letter-spacing:1px;">{{ reunion.plan_code }}</code>
+  {% if editing %}
+    <div class="rp-subtitle" style="margin:10px 0 4px;">Edit code (share only with people who should make changes):</div>
+    <code style="font-size:15px; font-weight:700; letter-spacing:1px;">{{ reunion.edit_code }}</code>
+  {% endif %}
+</div>
+
+<div class="rp-stat-grid">
+  <div class="rp-stat">
+    <div class="rp-stat-label">Going so far</div>
+    <div class="rp-stat-value">{{ going_count }}</div>
+    <div class="rp-stat-sub">{{ people_count }} on the board</div>
+  </div>
+  <div class="rp-stat accent">
+    <div class="rp-stat-label">Open tasks</div>
+    <div class="rp-stat-value">{{ open_tasks|length }}</div>
+    <div class="rp-stat-sub">up for grabs</div>
+  </div>
+  <div class="rp-stat">
+    <div class="rp-stat-label">Events planned</div>
+    <div class="rp-stat-value">{{ event_count }}</div>
+    <div class="rp-stat-sub">on the schedule</div>
+  </div>
+  <div class="rp-stat">
+    <div class="rp-stat-label">Places</div>
+    <div class="rp-stat-value">{{ places_count }}</div>
+    <div class="rp-stat-sub"><a href="{{ url_for('board.places', reunion_id=reunion_id) }}" class="btn-text">view details →</a></div>
+  </div>
+</div>
+
+{% if my_tasks %}
+<div class="rp-section">
+  <div class="rp-section-head"><h2>Your claimed tasks</h2></div>
+  {% for t in my_tasks %}
+    <div class="rp-task rp-task-cat-{{ t.category }} {{ 'done' if t.done }}">
+      <div>
+        <p class="rp-task-title {{ 'done' if t.done }}">{{ t.title }}</p>
+        <span class="rp-tag">{{ t.category }}</span>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="rp-section">
+  <div class="rp-section-head">
+    <h2>Help wanted</h2>
+    {% if open_tasks %}<a href="{{ url_for('board.tasks', reunion_id=reunion_id) }}" class="btn-text">See all {{ open_tasks|length }} →</a>{% endif %}
+  </div>
+  {% if open_tasks %}
+    {% for t in open_tasks[:4] %}
+      <div class="rp-task rp-task-cat-{{ t.category }}">
+        <div>
+          <p class="rp-task-title">{{ t.title }}</p>
+          <span class="rp-tag">{{ t.category }}</span>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="rp-empty">No open tasks right now. <a href="{{ url_for('board.tasks', reunion_id=reunion_id) }}" class="btn-text">Add something</a></div>
+  {% endif %}
+</div>
+
+<div class="rp-section">
+  <div class="rp-section-head">
+    <h2>Coming up</h2>
+    {% if upcoming %}<a href="{{ url_for('board.events', reunion_id=reunion_id) }}" class="btn-text">See all →</a>{% endif %}
+  </div>
+  {% if upcoming %}
+    {% for e in upcoming %}
+      <div class="rp-event">
+        <div class="rp-event-date-box">
+          <div class="rp-event-date-day">{{ e.event_date or 'TBD' }}</div>
+        </div>
+        <div>
+          <strong>{{ e.title }}</strong>
+          <div class="rp-event-meta">
+            {% if e.location %}<span>{{ e.location }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="rp-empty">No events on the books yet. <a href="{{ url_for('board.events', reunion_id=reunion_id) }}" class="btn-text">Plan one</a></div>
+  {% endif %}
+</div>
+
+{% endblock %}

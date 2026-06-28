@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% set active_tab = 'places' %}
+{% block title %}{{ reunion.name }} — Places{% endblock %}
+{% block content %}
+
+<div class="rp-section-head">
+  <div>
+    <h2>Where everyone's staying</h2>
+    <p class="rp-subtitle">Addresses, check-in times, WiFi, and host contacts — all in one place.</p>
+  </div>
+</div>
+
+{% if editing %}
+<div class="rp-form">
+  <form method="POST" action="{{ url_for('board.create_place', reunion_id=reunion_id) }}">
+    <input type="text" name="name" placeholder="Place name, e.g. The lake house" required>
+    <input type="text" name="address" placeholder="Address">
+
+    <div class="rp-form-row">
+      <div>
+        <label class="rp-field-label">Check-in</label>
+        <input type="date" name="check_in">
+      </div>
+      <div>
+        <label class="rp-field-label">Check-out</label>
+        <input type="date" name="check_out">
+      </div>
+    </div>
+
+    <div class="rp-form-row">
+      <input type="text" name="wifi_network" placeholder="WiFi network name (optional)">
+      <input type="text" name="wifi_password" placeholder="WiFi password (optional)">
+    </div>
+
+    <div class="rp-form-row">
+      <input type="text" name="host_name" placeholder="Host / contact name (optional)">
+      <input type="text" name="host_contact" placeholder="Host phone or email (optional)">
+    </div>
+
+    <textarea name="notes" placeholder="Anything else — parking, gate code, house rules, directions…"></textarea>
+
+    <div class="rp-form-actions">
+      <button type="submit" class="btn btn-primary">Add place</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div style="margin-top:20px;">
+  {% if not places %}
+    <div class="rp-empty">No places added yet{% if editing %}. Add the first one above{% endif %}.</div>
+  {% else %}
+    {% for p in places %}
+      <div class="rp-place-card">
+        <div class="rp-place-head">
+          <div>
+            <h3 class="rp-place-name">{{ p.name }}</h3>
+            {% if p.address %}<p class="rp-place-address"><i class="rp-pin">📍</i>{{ p.address }}</p>{% endif %}
+          </div>
+          {% if editing %}
+          <form method="POST" action="{{ url_for('board.delete_place', reunion_id=reunion_id, place_id=p.id) }}">
+            <button type="submit" class="btn-icon" aria-label="Delete">✕</button>
+          </form>
+          {% endif %}
+        </div>
+
+        {% if p.check_in or p.check_out %}
+        <div class="rp-place-dates">
+          {% if p.check_in %}<div><span class="rp-field-label">Check-in</span><strong>{{ p.check_in }}</strong></div>{% endif %}
+          {% if p.check_out %}<div><span class="rp-field-label">Check-out</span><strong>{{ p.check_out }}</strong></div>{% endif %}
+        </div>
+        {% endif %}
+
+        {% if p.wifi_network or p.wifi_password %}
+        <div class="rp-place-row">
+          <span class="rp-field-label">WiFi</span>
+          <span>
+            {% if p.wifi_network %}{{ p.wifi_network }}{% endif %}
+            {% if p.wifi_password %} — <code class="rp-wifi-pass">{{ p.wifi_password }}</code>{% endif %}
+          </span>
+        </div>
+        {% endif %}
+
+        {% if p.host_name or p.host_contact %}
+        <div class="rp-place-row">
+          <span class="rp-field-label">Host</span>
+          <span>{{ p.host_name }}{% if p.host_name and p.host_contact %} — {% endif %}{{ p.host_contact }}</span>
+        </div>
+        {% endif %}
+
+        {% if p.notes %}
+        <p class="rp-place-notes">{{ p.notes }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+{% endblock %}

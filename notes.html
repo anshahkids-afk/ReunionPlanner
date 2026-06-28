@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% set active_tab = 'notes' %}
+{% block title %}{{ reunion.name }} — Notes{% endblock %}
+{% block content %}
+
+<div class="rp-section-head">
+  <div>
+    <h2>Notes</h2>
+    <p class="rp-subtitle">Ideas, reminders, questions for the group.</p>
+  </div>
+</div>
+
+{% if editing %}
+<div class="rp-form">
+  <form method="POST" action="{{ url_for('board.create_note', reunion_id=reunion_id) }}">
+    <textarea name="text" placeholder="Leave a note for the group…" required></textarea>
+    <div class="rp-form-actions">
+      <button type="submit" class="btn btn-primary">Post note</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div style="margin-top:20px;">
+  {% if not notes %}
+    <div class="rp-empty">No notes yet{% if editing %}. Be the first to leave one{% endif %}.</div>
+  {% else %}
+    {% for n in notes %}
+      <div class="rp-card" style="background: var(--surface-alt); margin-bottom:10px;">
+        <p style="margin:0; font-size:14px; white-space:pre-wrap;">{{ n.text }}</p>
+        <div style="display:flex; justify-content:space-between; margin-top:8px; align-items:center;">
+          <span style="font-size:12px; color:var(--gold-dark); font-weight:600;">{{ n.author_name or "Someone" }}</span>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button class="rp-comments-toggle" onclick="toggleComments('{{ n.id }}')">
+              {{ n.comment_count }} comment{{ 's' if n.comment_count != 1 }}
+            </button>
+            {% if editing %}
+            <form method="POST" action="{{ url_for('board.delete_note', reunion_id=reunion_id, note_id=n.id) }}">
+              <button type="submit" class="btn-icon" aria-label="Delete">✕</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        <div id="comments-wrap-{{ n.id }}" style="display:none;" data-loaded="false" data-url="{{ url_for('board.view_comments', reunion_id=reunion_id, parent_type='note', parent_id=n.id) }}"></div>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<script>
+function toggleComments(id) {
+  const el = document.getElementById('comments-wrap-' + id);
+  const visible = el.style.display !== 'none';
+  if (visible) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  if (el.dataset.loaded === 'false') {
+    fetch(el.dataset.url).then(r => r.text()).then(html => {
+      el.innerHTML = html;
+      el.dataset.loaded = 'true';
+    });
+  }
+}
+</script>
+
+{% endblock %}

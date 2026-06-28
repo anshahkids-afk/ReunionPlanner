@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Reunion Planner{% endblock %}
+{% block content %}
+
+{% if not current_name %}
+<div class="rp-auth-wrap">
+  <div class="rp-auth-card">
+    <h2>What's your name?</h2>
+    <p class="rp-subtitle">This is how you'll show up on tasks, comments, and RSVPs.</p>
+    <form method="POST" class="rp-form" style="border:none;padding:0;margin-top:16px;">
+      <input type="text" name="name" placeholder="Your name" required autofocus>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Continue</button>
+    </form>
+  </div>
+</div>
+
+{% else %}
+
+<div class="rp-section" style="display:flex; gap:20px; flex-wrap:wrap; margin-top:20px;">
+  <div class="rp-card" style="flex:1; min-width:260px;">
+    <h3 style="font-size:16px; margin-bottom:10px;">Start a new reunion</h3>
+    <form method="POST" action="{{ url_for('access.create_reunion') }}" class="rp-form" style="border:none;padding:0;">
+      <input type="text" name="name" placeholder="Reunion name, e.g. Smith Family Reunion 2026" required>
+      <input type="text" name="tagline" placeholder="Tagline (optional)">
+      <button type="submit" class="btn btn-primary">Create reunion</button>
+    </form>
+  </div>
+
+  <div class="rp-card" style="flex:1; min-width:260px;">
+    <h3 style="font-size:16px; margin-bottom:10px;">Enter an existing reunion</h3>
+    <p class="rp-subtitle" style="margin-bottom:10px;">Ask the organizer for the plan code and enter it below. You can view right away — to make changes, you'll also need the edit code (entered later, on the board).</p>
+    <form method="POST" action="{{ url_for('access.enter_reunion') }}" class="rp-form" style="border:none;padding:0;">
+      <input type="text" name="plan_code" placeholder="Plan code" required style="text-transform:uppercase;">
+      <button type="submit" class="btn btn-secondary">Enter reunion</button>
+    </form>
+  </div>
+</div>
+
+<form method="POST" action="{{ url_for('access.change_name') }}" style="margin-top:16px;">
+  <button type="submit" class="btn-text">Not {{ current_name }}? Change name</button>
+</form>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% set active_tab = 'people' %}
+{% block title %}{{ reunion.name }} — People{% endblock %}
+{% block content %}
+
+{% set going = people|selectattr('rsvp', 'equalto', 'yes')|list %}
+{% set unknown = people|selectattr('rsvp', 'equalto', 'unknown')|list %}
+{% set no = people|selectattr('rsvp', 'equalto', 'no')|list %}
+
+<div class="rp-section-head">
+  <div>
+    <h2>Who's coming</h2>
+    <p class="rp-subtitle">{{ going|length }} going · {{ unknown|length }} haven't said · {{ no|length }} can't make it</p>
+  </div>
+</div>
+
+<div class="rp-card" style="margin-top:16px; margin-bottom:16px;">
+  <p class="rp-subtitle" style="margin-bottom:8px;">Your RSVP ({{ current_name }}):</p>
+  <form method="POST" action="{{ url_for('board.set_rsvp', reunion_id=reunion_id) }}" style="display:flex; gap:8px;">
+    <button type="submit" name="rsvp" value="yes" class="rp-chip {{ 'active' if my_entry and my_entry.rsvp == 'yes' }}">Going</button>
+    <button type="submit" name="rsvp" value="unknown" class="rp-chip {{ 'active' if my_entry and my_entry.rsvp == 'unknown' }}">Maybe</button>
+    <button type="submit" name="rsvp" value="no" class="rp-chip {{ 'active' if my_entry and my_entry.rsvp == 'no' }}">Can't make it</button>
+  </form>
+</div>
+
+{% if not people %}
+  <div class="rp-empty">Nobody's RSVP'd yet — be the first above.</div>
+{% else %}
+  {% for p in people %}
+    <div class="rp-person">
+      <div class="rp-avatar">{{ p.name[0]|upper }}</div>
+      <span style="flex:1; font-size:14px; font-weight:600;">
+        {{ p.name }}
+        {% if p.name == current_name %}<span style="font-size:11px; color:var(--ink-soft); font-weight:500;"> (you)</span>{% endif %}
+      </span>
+      <span class="rp-rsvp-badge rp-rsvp-{{ p.rsvp }}">
+        {{ {'yes': 'Going', 'no': "Can't make it", 'unknown': 'Maybe'}[p.rsvp] }}
+      </span>
+    </div>
+  {% endfor %}
+{% endif %}
+
+{% endblock %}
